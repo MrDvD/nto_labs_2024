@@ -1,0 +1,178 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  font-size: 10px;
+}
+
+@font-face {
+  font-family: Gilroy;
+  src: url("fonts/Gilroy-Regular.otf");
+}
+@font-face {
+  font-family: Gilroy;
+  src: url("fonts/Gilroy-MediumItalic.otf");
+  font-style: italic;
+}
+@font-face {
+  font-family: Century;
+  src: url("fonts/CenturySchoolbook-Roman.otf");
+}
+@font-face {
+  font-family: Century;
+  src: url("fonts/CenturySchoolbook-Italic.otf");
+  font-style: italic;
+}
+@font-face {
+  font-family: Century;
+  src: url("fonts/CenturySchoolbook-Bold.otf");
+  font-weight: bold;
+}
+@font-face {
+  font-family: Century;
+  src: url("fonts/CenturySchoolbook-BoldItalic.otf");
+  font-style: italic;
+  font-weight: bold;
+}
+
+.vert-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: inherit;
+  height: inherit;
+}
+
+.heading {
+  transform: translateY(-10px);
+  font-size: clamp(1.8rem, 4.5vw, 5.5rem);
+  white-space: nowrap;
+}
+
+.heading:before {
+  content: "№6";
+  font-family: Gilroy;
+}
+
+.heading:after {
+  content: " «Контроль дистанции»";
+  font-family: Gilroy;
+  font-style: italic;
+}
+
+.back {
+  display: flex;
+  height: 70%;
+  width: 80%;
+  background-color: #ccc;
+  border-radius: 40px;
+}
+
+.line {
+  width: 75%;
+  border-top: 5px solid #000;
+}
+
+.line:before {
+  content: "";
+  position: relative;
+  height: 25px;
+  width: 5px;
+  float: left;
+  background-color: #000;
+  transform: translateY(-60%);
+}
+
+.line:after {
+  content: "";
+  position: relative;
+  height: 25px;
+  width: 5px;
+  float: right;
+  background-color: #000;
+  transform: translateY(-60%);
+}
+
+.distance {
+  font-family: Century;
+  font-style: italic;
+  font-size: clamp(1.6rem, 3.5vw, 3rem);
+}
+
+.distance:before {
+  content: "???";
+}
+
+.distance:after {
+  content: " cm";
+}
+
+.warning {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+}
+
+.message {
+  background-color: #eee;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding-left: 10px;
+  padding-right: 15px;
+}
+
+#icon {
+  width: min(max(9vh, 9vw), 100px);
+  height: min(max(9vh, 9vw), 100px);
+  content: url("media/warn.png");
+}
+
+#text {
+  font-family: Century;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  white-space: nowrap;
+}
+
+.diff {
+  height: inherit;
+  background-color: #ddd;
+  border-radius: 12px;
+  font-family: Century;
+  font-weight: bold;
+  font-style: italic;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.diff:after {
+  content: "??? cm";
+}
+
+@media only screen and (max-width: 320px) {
+  .warning {
+    flex-direction: column;
+  }
+  .message {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .diff {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

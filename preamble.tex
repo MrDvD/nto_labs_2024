@@ -1,0 +1,215 @@
+\documentclass[12pt]{article}
+
+% remove: microtype, empheq, float, nccmath, graphicx
+
+% packages
+\usepackage{cellspace}
+\usepackage{adjustbox}
+
+\usepackage[a5paper,margin=12mm]{geometry}                      % макет
+\usepackage{polyglossia}                                        % язык
+\usepackage[warnings-off={mathtools-colon,
+                          mathtools-overbracket}]{unicode-math} % \setmathfont
+\usepackage{titlesec}                                           % \titleformat
+\usepackage[open,openlevel=1]{bookmark}                         % индексация pdf
+\usepackage[shortlabels]{enumitem}                              % списки
+\usepackage[table]{xcolor}                                      % \rowcolor
+\usepackage{xargs}                                              % \newenvironmentx
+\usepackage[most]{tcolorbox}                                    % блоки
+\usepackage[makeroom]{cancel}                                   % сокращение (maths)
+\usepackage{mathtools}                                          % \mathclap
+\usepackage{tabularx,multicol,multirow,makecell}                % таблицы
+\usepackage{tikz}                                               % графика
+\usetikzlibrary{intersections}                                  % 'name intersections'
+\usetikzlibrary{patterns}                                       % 'pattern'
+\usetikzlibrary{arrows.meta}                                    % arrows customization
+
+% enables russian hyphenation
+\setmainlanguage[babelshorthands=true]{russian}
+\setotherlanguage{english}
+
+% mainfont
+\newfontfamily\bold{Century Schoolbook Bold}
+\newfontfamily\ital{Century Schoolbook Italic}
+\newfontfamily\boldital{Century Schoolbook Bold Italic}
+% titlefont
+\newfontfamily\gilroysub[Scale=1.31,UprightFont={*-Medium}]{Gilroy}
+\newfontfamily\gilroy[Scale=1.59,UprightFont={*-UltraLight}]{Gilroy}
+\newfontfamily\tinyt[Scale=.835]{Century Schoolbook}
+% monofont
+\newfontfamily\mono{Anonymous Pro Regular}
+\newfontfamily\monobold{Anonymous Pro Bold}
+\newfontfamily\monoital{Anonymous Pro Italic}
+
+% font format
+\setmainfont{Century Schoolbook}
+\setmathfont{TeX Gyre Schola Math}
+
+\titleformat*{\subsection}{\raggedright\gilroysub}
+\titleformat*{\section}{\gilroy\centering}
+\titlespacing*{\subsection}{0pt}{6pt}{0pt}
+\titlespacing*{\section}{0pt}{6pt}{1pt}
+
+% colors
+\definecolor{desc}{HTML}{888888}
+\definecolor{table}{HTML}{D9D9D9}
+\definecolor{code}{HTML}{F3F3F3}
+
+% disables numeration
+\pagenumbering{gobble}
+\setcounter{secnumdepth}{0}
+
+% shorthands
+\newcommand\en[1]{\foreignlanguage{english}{#1}}     % english hyphenation
+\newcommand\qedb{\ \char"25A0}                       % q.e.d filled
+\newcommand\qedw{\ \char"25A1}                       % q.e.d empty
+\newcommand\abs[1]{\left|#1\right|}                  % abs function
+\newcommand\floor[1]{\left\lfloor#1\right\rfloor}    % floor function
+\newcommand\modb[1]{\ \left(\mathrm{mod}\ #1\right)} % modulo w brackets
+\newcommand\modn[1]{\ \mathrm{mod}\ #1}              % modulo w/o brackets
+\newcommand\pluseq{\mathrel{+}=}                     % += operator
+
+% column types
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+
+\addparagraphcolumntypes{X}
+\addparagraphcolumntypes{L}
+\addparagraphcolumntypes{C}
+\addparagraphcolumntypes{R}
+
+% cases env
+\renewenvironment{cases*}{
+\left\{\begin{aligned}
+}{\end{aligned}\right.}
+
+% rcases env
+\renewenvironment{rcases*}{
+\left.\begin{aligned}
+}{\end{aligned}\right\}}
+
+% sqcases env
+\newenvironment{sqcases*}{
+\left[\begin{aligned}
+}{\end{aligned}\right.}
+
+% itemize & enumerate env
+\newenvironmentx{list*}[2][1=1,2=-]{
+\if #2-
+\def\listenv{itemize}
+\ifnum #1=2
+\begin{\listenv}[leftmargin=4.5mm,itemsep=-3pt,topsep=-3pt,label=>]
+\else
+\begin{\listenv}[leftmargin=6.5mm,itemsep=-3pt,topsep=0pt,label=---]
+\fi
+\fi
+\if #2\#
+\def\listenv{enumerate}
+\begin{\listenv}[leftmargin=6.5mm,itemsep=-3pt,topsep=0pt,label=\theenumi)]
+\fi
+}{\end{\listenv}}
+
+% theorem box
+\newtcolorbox{theorem}{
+enhanced,
+boxrule=0mm,frame hidden,arc=0mm,
+colback=white!0,
+boxsep=0mm,left=3.5mm,
+borderline west={2pt}{0pt}{black},
+before skip=6pt,after skip=7pt,
+halign=left,
+parbox=false
+}
+
+% raises power of cosine functions
+\protected\def\arccos{\qopname\relax o{\vphantom{i}arccos}}
+\protected\def\cos{\qopname\relax o{\vphantom{i}cos}}
+
+
+
+% Стили
+\newcommand{\id}[1]{\text{id}_{#1}}
+\newcommand{\norm}[1]{\lVert#1\rVert}
+\newcommand{\sgnb}[1]{\text{sgn}\hspace*{-2pt}\left(#1\right)}
+\newcommand{\sgnn}[1]{\text{sgn}\ #1}
+\newcommand{\ren}[1]{\Re\text{e}\ #1}
+\newcommand{\reb}[1]{\Re\text{e}\left(#1\right)}
+\newcommand{\imn}[1]{\Im\text{m}\ #1}
+\newcommand{\imb}[1]{\Im\text{m}\left(#1\right)}
+\newcommand{\optm}[1]{\underset{\scriptscriptstyle #1}{\text{opt}}}
+\newcommand{\optl}[1]{\text{opt}_{#1}}
+\newcommand{\diff}{\text{d}}
+\newcommand{\footnotes}[2]{$^{#1}$\hspace*{-1.1pt}\let\thefootnote\relax\footnote
+{\hspace*{-18pt}#1 #2}}
+\newcommand{\multiset}[2]{\left(\!\!\binom{#1}{#2}\!\!\right)}
+\newcommand{\stirl}{\genfrac\{\}{0pt}{}}
+
+% Смена шрифта для \mathcal
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n}
+\SetMathAlphabet{\mathcal}{bold}{OMS}{cmsy}{b}{n}
+
+% Minipage environment
+\newenvironment{column*}[2]{
+\begin{minipage}[#1]{#2}
+\setlength\baselineskip{13.4pt} % Строка
+\setlength{\parskip}{6pt} % Абзац
+\abovedisplayskip=6pt % Формула над
+\belowdisplayskip=6pt % Формула под
+\raggedright % Выравнивание
+}{\end{minipage}}
+
+% Tabular environment
+\newenvironment{tabularc}[4]{
+\def\center{c}
+\if\center #4
+\centering
+\fi
+\setlength\tabcolsep{#1}
+\setlength\extrarowheight{#2}
+\begin{tabular}{#3}
+}{\end{tabular}\par}
+
+% Tabularx environment
+\newenvironment{tabularcx}[4]{
+\setlength\tabcolsep{#1}
+\setlength\extrarowheight{#2}
+\tabularx{#4}{#3}
+}{\endtabularx\par}
+
+% framed codebox with language customization
+\lstset{columns=fixed,basicstyle=\mono,basewidth=0.55em,keywordstyle=\monobold,commentstyle=\monoital\color[HTML]{888888}}
+
+% emph={has_ichain,get_cuts},emphstyle=\monoital
+
+\newtcblisting{code}[1]{
+enhanced,
+listing only,
+breakable,
+size=minimal,
+boxrule=0mm,frame hidden,arc=0mm,
+colback=white!0,
+boxsep=0mm,left=3.5mm,
+top=-1mm,bottom=-1mm,
+borderline west={2pt}{0pt}{black},
+before skip=6pt,after skip=7pt,
+listing options={language=#1,showstringspaces=false,literate={*}{{\raisebox{2pt}{$\ast$}}}{1}}}
+
+\newtcbox{\cdesc}{
+before upper=\monoital\color{desc},
+on line,
+enhanced,
+boxsep=0pt,
+size=fbox,
+colback=code,
+borderline={.4pt}{0pt}{desc!30},
+arc=0pt
+}
+
+% sheet test environment
+\newenvironmentx{sheet*}[2][1=,2=0]{
+\setlength\cellspacetoplimit{3pt}
+\setlength\cellspacebottomlimit{3pt}
+\renewcommand\arraystretch{#2}
+\tabularx{\textwidth}[m]{#1}
+}{\endtabularx\par}
