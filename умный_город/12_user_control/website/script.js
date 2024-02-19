@@ -1,17 +1,16 @@
+let server_ip = '{{ context.ip }}', web_port = {{ context.web_port }};
+
 async function init(url) {
     let response = await fetch(url, {
         method: 'GET'
     });
     if (response.status == 200) {
-        let cm = parseFloat(await response.text());
-        document.getElementsByClassName("distance")[0].innerHTML = `${cm} cm`;
-        let perc = Math.min(75, Math.max(15, 1.5 * cm));
-        document.getElementsByClassName("line")[0].style.width = `${perc}%`;
-        if (cm < 20) {
-            document.getElementsByClassName("diff")[0].innerHTML = `By<br>${20 - cm} cm`;
-            document.getElementsByClassName("warning")[0].style.visibility = "visible";
-        } else {
-            document.getElementsByClassName("warning")[0].style.visibility = "hidden";
+        let js = JSON.parse(await response.text());
+        let table = document.getElementById('users');
+        table.innerHTML = '<tr><th>ID</th><th>Clicks</th></tr>';
+        for (let i = 0; i < js.length; i++) {
+            let row = table.insertRow();
+            row.innerHTML = `<td>${js[i]['ID']}</td><td>${js[i]['Clicks']}</td>`;
         }
     } else {
         await init(url);
@@ -23,21 +22,18 @@ async function update(url) {
         method: 'GET'
     });
     if (response.status == 200) {
-        let cm = parseFloat(await response.text());
-        document.getElementsByClassName("distance")[0].innerHTML = `${cm} cm`;
-        let perc = Math.min(75, Math.max(15, 1.5 * cm));
-        document.getElementsByClassName("line")[0].style.width = `${perc}%`;
-        if (cm < 20) {
-            document.getElementsByClassName("diff")[0].innerHTML = `By<br>${20 - cm} cm`;
-            document.getElementsByClassName("warning")[0].style.visibility = "visible";
-        } else {
-            document.getElementsByClassName("warning")[0].style.visibility = "hidden";
+        let js = JSON.parse(await response.text());
+        let table = document.getElementById('users');
+        table.innerHTML = '<tr><th>ID</th><th>Clicks</th></tr>';
+        for (let i = 0; i < js.length; i++) {
+            let row = table.insertRow();
+            row.innerHTML = `<td>${js[i]['ID']}</td><td>${js[i]['Clicks']}</td>`;
         }
     }
     await update(url);
 }
 
 window.onload = function() {
-    init('http://192.168.45.242:7000/init');
-    update('http://192.168.45.242:7000/update')
+    init(`http://${server_ip}:${web_port}/init`);
+    update(`http://${server_ip}:${web_port}/update`);
 }

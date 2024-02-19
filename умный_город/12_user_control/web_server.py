@@ -1,14 +1,26 @@
 import flask, socket, sqlalchemy, json, pandas
 
-app = flask.Flask('Web')
+app = flask.Flask('Web', template_folder='')
+server_ip, web_port, server_port = '192.168.0.20', 7000, 7001
+
+def db_to_json():
+    sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
+    connection = sql_engine.raw_connection()
+    df = pandas.read_sql('SELECT * FROM test', con = connection)
+    data = list()
+    for i , r in df.iterrows():
+        di = {'ID': int(r['ID']), 'Clicks': int(r['Clicks'])}
+        data.append(di)
+    return json.dumps(data)
 
 @app.route('/', methods=['GET'])
 def main():
-    return flask.send_file('website/distance_control.html')
+    return flask.send_file('website/user_control.html')
 
 @app.route('/script.js', methods=['GET'])
 def script():
-    return flask.send_file('website/script.js')
+    conx = {'ip': server_ip, 'web_port': web_port}
+    return flask.render_template('website/script.js', context=conx)
 
 @app.route('/style.css', methods=['GET'])
 def styles():
@@ -24,29 +36,13 @@ def fonts(font):
 
 @app.route('/init', methods=['GET'])
 def init():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto('0'.encode(), ('192.168.45.242', 7001))
-    return sock.recv(100)
+    return db_to_json()
 
 @app.route('/update', methods=['GET'])
 def update():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto('1'.encode(), ('192.168.45.242', 7001))
-    return sock.recv(100)
+    sock.sendto('1'.encode(), (server_ip, server_port))
+    if sock.recv(100).decode() == '1':
+        return db_to_json()
 
-@app.route('/get-data',methods = ['GET'])
-def getdata():
-    sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
-    connection = sql_engine.raw_connection()
-    df = pandas.read_sql('SELECT * FROM test', con = connection)
-    data = []
-    for i , r in df.iterrows():
-        di = {'ID':int(r['ID']), 'Clicks':int(r['Clicks'])}
-        data.append(di)
-    js = json.dumps(data)
-    print(js)
-    return js    
-        
-
-
-app.run(host='192.168.45.242', port=7000)
+app.run(host=server_ip, port=web_port)

@@ -53,12 +53,12 @@ html, body {
 }
 
 .heading:before {
-  content: "№6";
+  content: "№7";
   font-family: Gilroy;
 }
 
 .heading:after {
-  content: " «Контроль дистанции»";
+  content: " «Учёт пользователей»";
   font-family: Gilroy;
   font-style: italic;
 }
@@ -71,83 +71,10 @@ html, body {
   border-radius: 40px;
 }
 
-.line {
-  width: 75%;
-  border-top: 5px solid #000;
-}
-
-.line:before {
-  content: "";
-  position: relative;
-  height: 25px;
-  width: 5px;
-  float: left;
-  background-color: #000;
-  transform: translateY(-60%);
-}
-
-.line:after {
-  content: "";
-  position: relative;
-  height: 25px;
-  width: 5px;
-  float: right;
-  background-color: #000;
-  transform: translateY(-60%);
-}
-
-.distance {
-  font-family: Century;
-  font-style: italic;
-  font-size: clamp(1.6rem, 3.5vw, 3rem);
-}
-
-.warning {
-  display: flex;
-  justify-content: center;
-  flex-direction: row;
-  visibility: "hidden";
-}
-
-.message {
-  background-color: #eee;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  padding-left: 10px;
-  padding-right: 15px;
-}
-
-#icon {
-  width: min(max(9vh, 9vw), 100px);
-  height: min(max(9vh, 9vw), 100px);
-  content: url("media/warn.png");
-}
-
-#text {
-  font-family: Century;
-  font-size: clamp(1.6rem, 3vw, 2.6rem);
-  white-space: nowrap;
-}
-
-.diff {
-  height: inherit;
-  background-color: #ddd;
-  border-radius: 12px;
-  font-family: Century;
-  font-weight: bold;
-  font-style: italic;
-  font-size: clamp(1.6rem, 3vw, 2.6rem);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  padding-left: 10px;
-  padding-right: 10px;
+table, th, td {
+    border: 1px solid;
+    background-color: #fff;
+    font-size: clamp(1.6rem, 2.5vw, 2rem);
 }
 
 @media only screen and (max-width: 320px) {

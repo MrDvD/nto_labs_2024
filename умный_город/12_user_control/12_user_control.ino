@@ -12,83 +12,57 @@ int port = 7001;
 WiFiUDP udp;
 
 std::string pack;
-int clicker = 0;
-int user = 0;
-int pressed = 0;
-bool bWasUp = false, bWasUp2 = false;
+int clicks = 0, user = 0;
+bool wasUp1 = false, wasUp2 = false;
 
 TaskHandle_t task_cl, task_send;
 
-// SemaphoreHandle_t mtx = xSemaphoreCreateMutex();
-
-std::string float_to_binary(float num, int precision) {
-    std::string binarized;
-    float integer;
-    float fraction = std::round(std::modf(num, &integer) * pow(10, precision));
-    integer = abs(integer); fraction = abs(fraction);
-    if (fraction > 0) { // CUTS FRACTION'S TRAILING ZEROS
-        while ((int) fraction % 10 == 0) {
-            fraction /= 10;
-        }
-    }
-    binarized += num >= 0 ? '0' : '1'; // SIGN
-    if (fraction == 0) {
-        binarized += "0"; // EXP_SIGN
-        int zeros = 0;
-        if (integer != 0) {
-            while ((int) integer % 10 == 0) {
-                integer /= 10;
-                zeros++;
-            }
-        }
-        binarized += std::bitset<6>(zeros).to_string(); // EXPONENT
-        binarized += std::bitset<24>(integer).to_string(); // MANTISSA
-    } else {
-        binarized += "1"; // EXP_SIGN
-        if (precision > ceil(log10(fraction))) { // CUTS MANTISSA'S TRAILING ZEROS
-            precision = ceil(log10(fraction));
-        }
-        binarized += std::bitset<6>(precision).to_string(); // EXPONENT
-        binarized += std::bitset<24>(integer * pow(10, precision) + fraction).to_string(); // MANTISSA
-    }
-    return binarized;
+std::string int_to_binary(int num, bool sign) {
+   std::string binarized;
+   if (sign) {
+      num = abs(num);
+      binarized += num >= 0 ? '0' : '1';
+   }
+   // change '8' to desired bit count
+   binarized += std::bitset<8>(num).to_string();
+   return binarized;
 }
 
 void send(void *params){
-   while (true){
-      bool isup = digitalRead(26);
+   while (true) {
+      bool isUp2 = digitalRead(26);
       Serial.printf("\r");
-      if (!bWasUp2 && isup){
-         pack = float_to_binary(user, 1) + float_to_binary(clicker, 1);
+      if (!wasUp2 && isUp2) {
+         pack = int_to_binary(user, 1) + int_to_binary(clicks, 1);
          udp.beginPacket(addr, port);
          udp.println(pack.c_str());
          udp.endPacket();
          Serial.println(pack.c_str());
+         // reset
          user++;
          user %= 4;
-         clicker = 0;
-         pressed = 0;
+         clicks = 0;
       }
-      bWasUp2 = isup;
+      wasUp2 = isUp2;
    }
 }
 
-void clicks(void *params){
+void click(void *params){
    while (true){
-      bool isup = digitalRead(25);
-      if (bWasUp && !isup){
-         clicker += 1;
+      bool isUp1 = digitalRead(25);
+      if (wasUp1 && !isUp1) {
+         clicks += 1;
       }
-      bWasUp = isup;
-      
+      wasUp1 = isUp1;
    }
 }
 
 void setup() {
    Serial.begin(115200);
-   
+   // PINS
    pinMode(26, INPUT_PULLDOWN);
    pinMode(25, INPUT);
+   // WIFI
    Serial.println("WIFI_CONNECTION");
    WiFi.mode(WIFI_STA);
    WiFi.begin(ssid, pass);
@@ -99,10 +73,9 @@ void setup() {
    }
    Serial.printf("Success");
    udp.begin(WiFi.localIP(), 7000);
-   
-   
+   // TASKS
    xTaskCreatePinnedToCore(send, "s", 10000, NULL, 1, &task_send, 0);
-   xTaskCreatePinnedToCore(clicks, "c", 10000, NULL, 1, &task_cl, 1);
+   xTaskCreatePinnedToCore(click, "c", 10000, NULL, 1, &task_cl, 1);
 }
 
 void loop() {

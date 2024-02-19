@@ -1,6 +1,7 @@
-import asyncio
+import asyncio, sqlalchemy
 import pandas as pd
-import sqlalchemy
+
+server_ip, server_port = '192.168.0.20', 7001
 
 class Activator:
     def __init__(self, *servers):
@@ -14,40 +15,45 @@ class Activator:
         asyncio.run(self.gather())
 
 class Datagram(asyncio.DatagramProtocol):
-    def __init__(self, distance):
+    def __init__(self, update):
         super().__init__()
-        self.distance = distance
-        self.cache = 5
+        self.update = update
     
-    def binary_to_float(self, binary):
+    def binary_to_int(self, binary):
         sign = -1 if int(binary[0]) else 1
-        pow_sign = -1 if int(binary[1]) else 1
-        power = int(binary[2:8], 2)
-        mantissa = int(binary[8:], 2)
-        return int(sign * mantissa * 10 ** (pow_sign * power))
+        result = int(binary[1:], 2)
+        return sign * result
 
     def connection_made(self, transport):
         print('[SERVER_ACTIVATED]')
         self.transport = transport
         self.is_closed = asyncio.Future()
     
-    def datagram_received(self, data, addr):
+    async def handle_data(self, data, addr):
         data = data.decode()
-        user_id, clicks = self.binary_to_float(data[0:32]), self.binary_to_float(data[32:])
-        sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
-        connection = sql_engine.raw_connection()
-        df = pd.read_sql('SELECT * FROM test', con = connection)
-        print(df)
-        if not(user_id in df.ID.tolist()):
-            dict = {'ID':[user_id], 'Clicks':[clicks]}
-            df2 = pd.DataFrame(dict)
-            df3 = pd.concat([df, df2]) 
-            df3.to_sql('test', connection, index=False, if_exists='replace')
+        if data == '1':
+            self.transport.sendto(str(await self.update).encode(), addr)
+            self.update = asyncio.Future()
         else:
-            df.loc[df['ID'] == user_id, 'Clicks'] += clicks
-            df.to_sql('test', connection, index=False, if_exists='replace')
-        df = pd.read_sql('SELECT * FROM test', con = connection)
-        print(df)
+            user_id, clicks = self.binary_to_int(data[0:8]), self.binary_to_int(data[8:])
+            sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
+            connection = sql_engine.raw_connection()
+            df = pd.read_sql('SELECT * FROM test', con = connection)
+            if not(user_id in df.ID.tolist()):
+                row_dict = {'ID':[user_id], 'Clicks':[clicks]}
+                row = pd.DataFrame(row_dict)
+                new = pd.concat([df, row]) 
+                new.to_sql('test', connection, index=False, if_exists='replace')
+            else:
+                df.loc[df['ID'] == user_id, 'Clicks'] += clicks
+                df.to_sql('test', connection, index=False, if_exists='replace')
+            # df = pd.read_sql('SELECT * FROM test', con = connection)
+            # print(df)
+            self.update.set_result(1)
+
+    def datagram_received(self, data, addr):
+        loop = asyncio.get_running_loop()
+        loop.create_task(self.handle_data(data, addr))
     
     def connection_lost(self, exception):
         print("[CONNECTION_CLOSED]")
@@ -61,6 +67,7 @@ class Server:
     def __init__(self, ip, port):
         self.ip, self.port = ip, port
         try:
+            # creates db if it didn't exist
             dict = {'ID':[], 'Clicks':[]}
             df = pd.DataFrame(dict)
             sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
@@ -71,14 +78,14 @@ class Server:
     
     async def start(self):
         loop = asyncio.get_running_loop()
-        self.distance = asyncio.Future()
+        self.update = asyncio.Future()
         transport, protocol = await loop.create_datagram_endpoint(
-            lambda: Datagram(self.distance),
+            lambda: Datagram(self.update),
             local_addr=(self.ip, self.port)
         )
         await protocol.serve_forever()
 
-server = Server('192.168.45.242', 7001)
+server = Server(server_ip, server_port)
 
 obj = Activator(server)
 obj.elevate()
