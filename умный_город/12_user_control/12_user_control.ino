@@ -9,41 +9,17 @@ const char pass[] = "11111111";
 const char addr[] = "192.168.45.242";
 int port = 7001;
 
-long duration;
-float cm;
-
-IPAddress dest;
 WiFiUDP udp;
 
-TaskHandle_t task_get, task_send;
+std::string pack;
+int clicker = 0;
+int user = 0;
+int pressed = 0;
+bool bWasUp = false, bWasUp2 = false;
 
+TaskHandle_t task_cl, task_send;
 
-struct Avg {
-    int pin1, pin2, samples, ms;
-    float sum;
-    float get() {
-        for (int i = 0; i < samples; i++) {
-               digitalWrite(pin1, LOW);
-               delayMicroseconds(5);
-               digitalWrite(pin1, HIGH);
-               
-               delayMicroseconds(10);
-               digitalWrite(pin1, LOW);
-   
-               duration = pulseIn(pin2, HIGH);
-         
-            sum += duration;
-            delay(ms);
-        }
-        float average = sum / samples; sum = 0;
-        return average;
-    }
-    Avg(int p, int p2, int s, int m) {
-        pin1 = p; pin2 = p2; samples = s; ms = m;
-    }
-};
-
-auto avg_10 = Avg(26, 25, 5, 50);
+// SemaphoreHandle_t mtx = xSemaphoreCreateMutex();
 
 std::string float_to_binary(float num, int precision) {
     std::string binarized;
@@ -80,40 +56,39 @@ std::string float_to_binary(float num, int precision) {
 
 void send(void *params){
    while (true){
-         cm = (avg_10.get() / 2) / 29.1;
-         Serial.println(cm);
+      bool isup = digitalRead(26);
+      Serial.printf("\r");
+      if (!bWasUp2 && isup){
+         pack = float_to_binary(user, 1) + float_to_binary(clicker, 1);
          udp.beginPacket(addr, port);
-         udp.println(float_to_binary(cm, 1).c_str());
+         udp.println(pack.c_str());
          udp.endPacket();
-         delay(500);
-   }
-}
-
-
-void get(void *params){
-   uint8_t buffer[1];
-   while (true){
-      udp.parsePacket();
-      if(udp.read(buffer, 1) > 0){
-         Serial.println((char *)buffer);
-         if (buffer[0] == '0'){
-            digitalWrite(17, LOW);
-         }
-         else {
-            digitalWrite(17, HIGH);
-         }
+         Serial.println(pack.c_str());
+         user++;
+         user %= 4;
+         clicker = 0;
+         pressed = 0;
       }
+      bWasUp2 = isup;
    }
 }
 
-
+void clicks(void *params){
+   while (true){
+      bool isup = digitalRead(25);
+      if (bWasUp && !isup){
+         clicker += 1;
+      }
+      bWasUp = isup;
+      
+   }
+}
 
 void setup() {
    Serial.begin(115200);
    
-   pinMode(26, OUTPUT);
+   pinMode(26, INPUT_PULLDOWN);
    pinMode(25, INPUT);
-   pinMode(17, OUTPUT);
    Serial.println("WIFI_CONNECTION");
    WiFi.mode(WIFI_STA);
    WiFi.begin(ssid, pass);
@@ -125,10 +100,11 @@ void setup() {
    Serial.printf("Success");
    udp.begin(WiFi.localIP(), 7000);
    
-   xTaskCreatePinnedToCore(get, "g", 10000, NULL, 1, &task_get, 1);
+   
    xTaskCreatePinnedToCore(send, "s", 10000, NULL, 1, &task_send, 0);
+   xTaskCreatePinnedToCore(clicks, "c", 10000, NULL, 1, &task_cl, 1);
 }
 
 void loop() {
    vTaskDelay(100);
-   }
+}

@@ -1,4 +1,4 @@
-import flask, socket
+import flask, socket, sqlalchemy, json, pandas
 
 app = flask.Flask('Web')
 
@@ -34,4 +34,19 @@ def update():
     sock.sendto('1'.encode(), ('192.168.45.242', 7001))
     return sock.recv(100)
 
-app.run(host='192.168.42.233', port=7000)
+@app.route('/get-data',methods = ['GET'])
+def getdata():
+    sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
+    connection = sql_engine.raw_connection()
+    df = pandas.read_sql('SELECT * FROM test', con = connection)
+    data = []
+    for i , r in df.iterrows():
+        di = {'ID':int(r['ID']), 'Clicks':int(r['Clicks'])}
+        data.append(di)
+    js = json.dumps(data)
+    print(js)
+    return js    
+        
+
+
+app.run(host='192.168.45.242', port=7000)
