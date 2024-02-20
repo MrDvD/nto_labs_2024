@@ -6,7 +6,7 @@
 const char ssid[] = "Redmi Note 10S";
 const char pass[] = "11111111";
 
-const char addr[] = "192.168.45.242";
+const char addr[] = "192.168.52.242";
 int port = 7001;
 
 WiFiUDP udp;
@@ -24,7 +24,7 @@ std::string int_to_binary(int num, bool sign) {
       binarized += num >= 0 ? '0' : '1';
    }
    // change '8' to desired bit count
-   binarized += std::bitset<8>(num).to_string();
+   binarized += std::bitset<7>(num).to_string();
    return binarized;
 }
 
