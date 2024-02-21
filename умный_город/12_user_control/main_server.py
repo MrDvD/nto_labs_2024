@@ -1,7 +1,8 @@
-import asyncio, sqlalchemy
+import asyncio, sqlalchemy, yaml
 import pandas as pd
 
-server_ip, server_port = '192.168.52.242', 7001
+with open('config.yaml', 'r') as f:
+    cfg = yaml.load(f, Loader=yaml.FullLoader)
 
 class Activator:
     def __init__(self, *servers):
@@ -88,7 +89,7 @@ class Server:
         )
         await protocol.serve_forever()
 
-server = Server(server_ip, server_port)
+server = Server(cfg['server_ip'], cfg['server_port'])
 
 obj = Activator(server)
 obj.elevate()

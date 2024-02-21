@@ -7,16 +7,17 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-const char ssid[] = "Redmi Note 10S";
-const char pass[] = "11111111";
+const char ssid[] = "Testy";
+const char pass[] = "22222222";
 
-const char addr[] = "192.168.52.242";
+const char addr[] = "10.42.0.1";
 int port = 7001;
 
 WiFiUDP udp;
+WiFiUDP udp1;
 
-int D0 = 14;
-int D1 = 27;
+int D0 = 27;
+int D1 = 14;
 int RESET = 17;
 int DC = 12;
 int CS = 13;
@@ -28,7 +29,7 @@ int user = 0, charge = 0, mark1 = 0, mark2 = 0, charge2 =0;
 int val = -1;
 bool wasUp1 = false, wasUp2 = false, isUp = false, wasUp = false;
 
-TaskHandle_t task_cl, task_send;
+TaskHandle_t task_cl, task_send, task_get;
 
 std::string int_to_binary(int num, bool sign) {
    std::string binarized;
@@ -36,9 +37,23 @@ std::string int_to_binary(int num, bool sign) {
       num = abs(num);
       binarized += num >= 0 ? '0' : '1';
    }
-   // change '8' to desired bit count
-   binarized += std::bitset<7>(num).to_string();
+   // change '7' to desired bit count
+   binarized += std::bitset<8>(num).to_string();
    return binarized;
+}
+
+void get_usr(void *params){
+   udp1.begin(7002);
+   while (true){
+      uint8_t buffer[500];
+      udp1.parsePacket();
+      if (udp1.read(buffer, 500)>0){
+         user = (int)buffer - '0';
+      }
+      vTaskDelay(0);     
+   }
+
+   
 }
 
 void send(void *params){
@@ -56,11 +71,11 @@ void send(void *params){
       Serial.printf("%d %d %d %d\n", mark1, mark2, isUp, wasUp);
       charge2 = charge;
       int curr = millis();
-      if (mark2 == -1 && isUp && curr - mark1 > 150){
+      if (mark2 == -1 && isUp && curr - mark1 > (1000 + user*250)){
             charge2 += 1;
             mark1 = curr;
             val = 1;
-      }else if (mark1 == -1 && !isUp && curr - mark2 > 150) {
+      }else if (mark1 == -1 && !isUp && curr - mark2 > (1000 - user*250)) {
          charge2 -= 1;
          mark2 = curr;
          val = 2;
@@ -71,10 +86,15 @@ void send(void *params){
       }else if (charge2 < 0) {
          charge2 = 0;
          val = 0;
+      } 
+      if (charge2 == 0) {
+         val = 0;
+      }else if (charge2 == 100) {
+         val = 3;
       }
       if (!(charge2 == charge)) {
          
-         pack = int_to_binary(charge2, 1);
+         pack = int_to_binary(charge2, 0) + int_to_binary(val, 0) + int_to_binary(user, 0);
          udp.beginPacket(addr, port);
          udp.println(pack.c_str());
          udp.endPacket(); 
@@ -112,6 +132,7 @@ void send(void *params){
       display.printf("%d%%", charge2);
       display.display();
       charge = charge2;
+      vTaskDelay(0);  
    }
 }
 
@@ -160,6 +181,7 @@ void setup() {
    udp.begin(WiFi.localIP(), 7000);
    // TASKS
    xTaskCreatePinnedToCore(send, "s", 10000, NULL, 1, &task_send, 1);
+   xTaskCreatePinnedToCore(get_usr, "g", 10000, NULL, 1, &task_get, 1);
    xTaskCreatePinnedToCore(click, "c", 10000, NULL, 1, &task_cl, 0);
 }
 

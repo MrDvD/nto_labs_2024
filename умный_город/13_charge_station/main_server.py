@@ -1,7 +1,8 @@
-import asyncio, sqlalchemy
+import asyncio, sqlalchemy, yaml, json
 import pandas as pd
 
-server_ip, server_port = '192.168.52.242', 7001
+with open('config.yaml') as f:
+    cfg = yaml.load(f, Loader=yaml.FullLoader)
 
 class Activator:
     def __init__(self, *servers):
@@ -22,7 +23,6 @@ class Datagram(asyncio.DatagramProtocol):
     def binary_to_int(self, binary):
         sign = -1 if int(binary[0]) else 1
         result = int(binary[1:], 2)
-        print(binary, result, sign, 'this')
         return sign * result
 
     def connection_made(self, transport):
@@ -32,25 +32,16 @@ class Datagram(asyncio.DatagramProtocol):
     
     async def handle_data(self, data, addr):
         data = data.decode()
+        print(data)
         if data == '1':
             self.transport.sendto((await self.update).encode(), addr)
             self.update = asyncio.Future()
         else:
-            user_id, clicks = self.binary_to_int(data[0:8]), self.binary_to_int(data[8:16])
-            print(user_id, clicks)
-            sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
-            connection = sql_engine.raw_connection()
-            df = pd.read_sql('SELECT * FROM test', con = connection)
-            if not(user_id in df.ID.tolist()):
-                row_dict = {'ID':[user_id], 'Clicks':[clicks]}
-                row = pd.DataFrame(row_dict)
-                new = pd.concat([df, row]) 
-                new.to_sql('test', connection, index=False, if_exists='replace')
-            else:
-                df.loc[df['ID'] == user_id, 'Clicks'] += clicks
-                df.to_sql('test', connection, index=False, if_exists='replace')
-            df = pd.read_sql('SELECT * FROM test', con = connection)
-            print(df)
+            charge, state, users = self.binary_to_int(data[0:8]), self.binary_to_int(data[8:16]), self.binary_to_int(data[16:24])
+            print(charge, state, users)
+            data = {'charge': charge, 'state': state, 'nusr': users}
+            with open('data.json', 'w') as f:
+                json.dump(data, f)
             if not self.update.done():
                 self.update.set_result('1')
 
@@ -69,15 +60,6 @@ class Datagram(asyncio.DatagramProtocol):
 class Server:
     def __init__(self, ip, port):
         self.ip, self.port = ip, port
-        try:
-            # creates db if it didn't exist
-            dict = {'ID':[], 'Clicks':[]}
-            df = pd.DataFrame(dict)
-            sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
-            connection = sql_engine.raw_connection()
-            df.to_sql('test', connection, index=False, if_exists='fail')
-        except:
-            pass
     
     async def start(self):
         loop = asyncio.get_running_loop()
@@ -88,7 +70,7 @@ class Server:
         )
         await protocol.serve_forever()
 
-server = Server(server_ip, server_port)
+server = Server(cfg['server_ip'], cfg['server_port'])
 
 obj = Activator(server)
 obj.elevate()

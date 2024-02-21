@@ -1,0 +1,5 @@
+---
+server_ip: 10.42.0.1
+server_port: 7001
+web_port: 80
+...
