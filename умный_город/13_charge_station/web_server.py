@@ -1,7 +1,9 @@
-import flask, socket, sqlalchemy, json, pandas
+import flask, socket, sqlalchemy, json, pandas, yaml
+
+with open('config.yaml') as f:
+    cfg = yaml.load(f, Loader=yaml.FullLoader)
 
 app = flask.Flask('Web', template_folder='')
-server_ip, web_port, server_port = '192.168.52.242', 7000, 7001
 
 def db_to_json():
     sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
@@ -19,7 +21,7 @@ def main():
 
 @app.route('/script.js', methods=['GET'])
 def script():
-    conx = {'ip': server_ip, 'web_port': web_port}
+    conx = {'ip': cfg['server_ip'], 'web_port': cfg['web_port']}
     return flask.render_template('website/script.js', context=conx)
 
 @app.route('/style.css', methods=['GET'])
@@ -41,8 +43,8 @@ def init():
 @app.route('/update', methods=['GET'])
 def update():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto('1'.encode(), (server_ip, server_port))
+    sock.sendto('1'.encode(), (cfg['server_ip'], cfg['server_ip']))
     if sock.recv(100).decode() == '1':
         return db_to_json()
 
-app.run(host=server_ip, port=web_port)
+app.run(host=cfg['server_ip'], port=cfg['web_port'])

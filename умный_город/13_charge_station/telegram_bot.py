@@ -1,102 +1,79 @@
-import telebot, json, pandas, sqlalchemy
+import telebot, json, pandas, sqlalchemy, yaml
 from telebot import types
 
-bot = telebot.TeleBot('7045541803:AAGJ3axeJEENXltI8TLBuLQ_qlHJKsXN0wY')
+with open('config.yaml') as f:
+    cfg = yaml.load(f, Loader=yaml.FullLoader)
+
+bot = telebot.TeleBot(cfg['telegram_api'])
+battery_state = {0: 'Discharged', 1: 'Charging', 2: 'Discharging', 3: 'Charged'}
+
+try:
+    # creates db if it didn't exist
+    sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
+    connection = sql_engine.raw_connection()
+    df = pandas.DataFrame({'ID': []})
+    df.to_sql('test', connection, index=False, if_exists='fail')
+except:
+    pass
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.InlineKeyboardMarkup(row_width = 2)
+    markup = types.InlineKeyboardMarkup(row_width=2)
 
-    but1 = types.InlineKeyboardButton('Battery state', callback_data='state')
-    but2 = types.InlineKeyboardButton('Connect', callback_data='adusr')
+    button1 = types.InlineKeyboardButton('Battery state', callback_data='state')
+    button2 = types.InlineKeyboardButton('Connect', callback_data='con')
 
-    markup.add(but1, but2)
+    markup.add(button1, button2)
     bot.send_message(message.chat.id, "Choose", reply_markup=markup)
-
-
 
 @bot.callback_query_handler(func=lambda call:True)
 def answer(callback):
-    markup2 = types.InlineKeyboardMarkup(row_width = 2)
-    markup3 = types.InlineKeyboardMarkup(row_width = 2)
+    markup_con = types.InlineKeyboardMarkup(row_width=2)
+    markup_dis = types.InlineKeyboardMarkup(row_width=2)
 
-    but1 = types.InlineKeyboardButton('Battery state', callback_data='state')
-    but2 = types.InlineKeyboardButton('Connect', callback_data='adusr')
-    but3 = types.InlineKeyboardButton('Disconnect', callback_data='rmusr')
+    button1 = types.InlineKeyboardButton('Battery state', callback_data='state')
+    button2 = types.InlineKeyboardButton('Connect', callback_data='con')
+    button3 = types.InlineKeyboardButton('Disconnect', callback_data='dis')
 
-    markup2.add(but1, but2)
-    markup3.add(but1, but3)
+    markup_con.add(button1, button2)
+    markup_dis.add(button1, button3)
 
-    usr_id = callback.message.chat.id
+    user_id = callback.message.chat.id
 
     if callback.message:
         if callback.data == 'state':
             with open('data.json') as f:
                 jlist = json.load(f)
-                charge = jlist['charge']
-                if jlist['state'] == 0:
-                    status = 'Discharged'
-                elif jlist['state'] == 1:
-                    status = 'Charging'
-                elif jlist['state'] == 2:
-                    status = 'Discharging'
-                elif jlist['state'] == 3:
-                    status = 'Charged'
-            try:
-                bot.edit_message_text(chat_id=callback.message.chat.id, text=f"Current charge: {charge}%\nCurrent state: {status}", message_id=callback.message.message_id, reply_markup= markup2)
-            except Exception as e:
-                bot.edit_message_text(chat_id=callback.message.chat.id, text=f"Current charge: {charge}% \nCurrent state: {status}", message_id=callback.message.message_id, reply_markup= markup2)
-        
-        elif callback.data == 'adusr':
-            with open('data.json') as f:
-                jlist = json.loads(f.read())
-                sql_engine = sqlalchemy.create_engine('sqlite:///users.db', echo = False)
-                connection = sql_engine.raw_connection()
-                dict = {'ID':[]}
-                df = pandas.DataFrame(dict)
-                try:
-                   df.to_sql('users', connection, index=False, if_exists='fail')
-                except:
-                    pass
-                df = pandas.read_sql('SELECT * FROM users', con = connection)
-                if not(callback.message.from_user.id in df.ID.tolist()):
-                    
-                    print(usr_id)
-                    new_dict = {'ID':[usr_id]}
-                    row = pandas.DataFrame(new_dict)
-                    new = pandas.concat([df, row])
-                    new.to_sql('users', connection, index=False, if_exists='replace')
-                    num = len(new)
-                    print(new, '---------con-----------')
-                    try:
-                        bot.edit_message_text( text=f'You\'ve been connected\n{num} people currently connected', chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup2)
-                    except Exception as e:
-                        bot.edit_message_text( text=f'You\'ve been connected \n{num} people currently connected', chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup2)
-
-                else:
-                    num = len(df)
-                    try:
-                        bot.edit_message_text( text=f'You\'re already connected\n{num} people currently connected', chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup3)
-                    except Exception as e:
-                        bot.edit_message_text( text=f'You\'re already connected \n{num} people currently connected', chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup3)
-
-
-        elif callback.data == 'rmusr':
-            sql_engine = sqlalchemy.create_engine('sqlite:///users.db', echo = False)
+            charge, status = jlist['charge'], battery_state[jlist['state']]
+            new_text = f'Current charge: {charge}%\nCurrent state: {status}'
+            markup = markup_con
+        else:
+            sql_engine = sqlalchemy.create_engine('sqlite:///users.db', echo=False)
             connection = sql_engine.raw_connection()
-            df = pandas.read_sql('SELECT * FROM users', con = connection)
-            df = df.drop(df[df['ID'] == usr_id].index)
-            df.to_sql('users', connection, index=False, if_exists='replace')
-            num = len(df)
-            print(df, '----------dis---------')
-            try:
-                bot.edit_message_text( text=f'You\'ve been disconnected\n{num} people currently connected', chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup2)
-            except Exception as e:
-                bot.edit_message_text( text=f'You\'ve been disconnected \n{num} people currently connected', chat_id=callback.message.chat.id, message_id=callback.message.message_id, reply_markup=markup2)
-
-
-
-
-
+            df = pandas.read_sql('SELECT * FROM users', con=connection)
+            if callback.data == 'con':
+                if callback.message.from_user.id not in df.ID.tolist():
+                    # print(user_id)
+                    row = pandas.DataFrame({'ID': [user_id]})
+                    df = pandas.concat([df, row])
+                    df.to_sql('users', connection, index=False, if_exists='replace')
+                    new_text = 'You\'ve been connected\n{} people currently connected'
+                    markup = markup_con
+                else:
+                    new_text = 'You\'re already connected\n{} people currently connected'
+                    markup = markup_dis
+            else:
+                df = df.drop(df[df['ID'] == user_id].index)
+                df.to_sql('users', connection, index=False, if_exists='replace')
+                # print(df, '----------dis---------')
+                new_text = 'You\'ve been disconnected\n{} people currently connected'
+                markup = markup_con
+            count = len(df)
+            new_text = new_text.format(count)
+        if callback.message.text != new_text:
+            bot.edit_message_text(text=new_text,
+                                  chat_id=callback.message.chat.id,
+                                  message_id=callback.message.message_id,
+                                  reply_markup=markup)
 
 bot.infinity_polling()

@@ -1,5 +1,6 @@
 ---
-server_ip: 10.42.0.1
+server_ip: server.tasty
 server_port: 7001
 web_port: 80
+telegram_api: 7045541803:AAGJ3axeJEENXltI8TLBuLQ_qlHJKsXN0wY
 ...
