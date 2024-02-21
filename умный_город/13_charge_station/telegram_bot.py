@@ -9,10 +9,10 @@ battery_state = {0: 'Discharged', 1: 'Charging', 2: 'Discharging', 3: 'Charged'}
 
 try:
     # creates db if it didn't exist
-    sql_engine = sqlalchemy.create_engine('sqlite:///test.db', echo = False)
+    sql_engine = sqlalchemy.create_engine('sqlite:///users.db', echo=False)
     connection = sql_engine.raw_connection()
     df = pandas.DataFrame({'ID': []})
-    df.to_sql('test', connection, index=False, if_exists='fail')
+    df.to_sql('users', connection, index=False, if_exists='fail')
 except:
     pass
 
