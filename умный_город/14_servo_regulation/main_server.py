@@ -20,9 +20,8 @@ class Datagram(asyncio.DatagramProtocol):
         self.update = update
     
     def binary_to_int(self, binary):
-        sign = -1 if int(binary[0]) else 1
-        result = int(binary[1:], 2)
-        return sign * result
+        result = int(binary, 2)
+        return result
     
     def int_to_binary(self, number, bits):
         result = bin(number)[2:]
@@ -34,25 +33,38 @@ class Datagram(asyncio.DatagramProtocol):
         self.is_closed = asyncio.Future()
     
     async def handle_data(self, data, addr):
-        data = data.decode().rstrip('\r\n')
-        print(data)
-        if data == '1':
-            self.transport.sendto((await self.update).encode(), addr)
-            self.update = asyncio.Future()
-        elif data == '0':
-            # telegram bot update
-            sql_engine = sqlalchemy.create_engine('sqlite:///users.db', echo=False)
-            connection = sql_engine.raw_connection()
-            df = pandas.read_sql('SELECT * FROM users', con=connection)
-            # ПЕРЕДЕЛАТЬ ЛОГИКУ: БУДУЩЕЕ МОЖЕТ БЫТЬ УЖЕ НЕАКТУАЛЬНЫМ
+        data = data.decode()[:-2]
+        if data == '0':
+            with open('data.json') as f:
+                angle = json.load(f)['angle']
             if not self.update.done():
-                self.update.set_result(str(self.int_to_binary(len(df), 8)))
-        elif len(data) > 16:
-            charge, state, users = self.binary_to_int(data[0:8]), self.binary_to_int(data[8:16]), self.binary_to_int(data[16:24])
-            # print(charge, state, users)
-            data = {'charge': charge, 'state': state, 'nusr': users}
+                self.update.set_result(self.int_to_binary(angle, 9))
+        elif data == '1':
+            print(await self.update)
+            self.transport.sendto(str(await self.update).encode(), addr)
+            self.update = asyncio.Future()
+        else:
+            angle = self.binary_to_int(data)
+            to_dump = {'angle': angle}
             with open('data.json', 'w') as f:
-                json.dump(data, f)
+                json.dump(to_dump, f)
+        # if data == '1':
+        #     self.transport.sendto((await self.update).encode(), addr)
+        #     self.update = asyncio.Future()
+        # elif data == '0':
+        #     # telegram bot update
+        #     sql_engine = sqlalchemy.create_engine('sqlite:///users.db', echo=False)
+        #     connection = sql_engine.raw_connection()
+        #     df = pandas.read_sql('SELECT * FROM users', con=connection)
+        #     # ПЕРЕДЕЛАТЬ ЛОГИКУ: БУДУЩЕЕ МОЖЕТ БЫТЬ УЖЕ НЕАКТУАЛЬНЫМ
+        #     if not self.update.done():
+        #         self.update.set_result(str(self.int_to_binary(len(df), 8)))
+        # elif len(data) > 16:
+        #     charge, state, users = self.binary_to_int(data[0:8]), self.binary_to_int(data[8:16]), self.binary_to_int(data[16:24])
+        #     # print(charge, state, users)
+        #     data = {'charge': charge, 'state': state, 'nusr': users}
+        #     with open('data.json', 'w') as f:
+        #         json.dump(data, f)
 
     def datagram_received(self, data, addr):
         loop = asyncio.get_running_loop()

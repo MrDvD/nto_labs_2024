@@ -1,4 +1,4 @@
-import telebot, json, pandas, sqlalchemy, yaml
+import telebot, json, pandas, sqlalchemy, yaml, socket
 from telebot import types
 
 with open('config.yaml') as f:
@@ -38,7 +38,7 @@ def answer(callback):
     markup_con.add(button1, button2)
     markup_dis.add(button1, button3)
 
-    user_id = callback.message.chat.id
+    user_id = callback.from_user.id
 
     if callback.message:
         if callback.data == 'state':
@@ -52,13 +52,13 @@ def answer(callback):
             connection = sql_engine.raw_connection()
             df = pandas.read_sql('SELECT * FROM users', con=connection)
             if callback.data == 'con':
-                if callback.message.from_user.id not in df.ID.tolist():
+                if user_id not in df.ID.tolist():
                     # print(user_id)
                     row = pandas.DataFrame({'ID': [user_id]})
                     df = pandas.concat([df, row])
                     df.to_sql('users', connection, index=False, if_exists='replace')
                     new_text = 'You\'ve been connected\n{} people currently connected'
-                    markup = markup_con
+                    markup = markup_dis
                 else:
                     new_text = 'You\'re already connected\n{} people currently connected'
                     markup = markup_dis
@@ -70,6 +70,9 @@ def answer(callback):
                 markup = markup_con
             count = len(df)
             new_text = new_text.format(count)
+            # acknowledge server
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.sendto('0\r\n'.encode(), (cfg['server_ip'], cfg['server_port']))
         if callback.message.text != new_text:
             bot.edit_message_text(text=new_text,
                                   chat_id=callback.message.chat.id,
