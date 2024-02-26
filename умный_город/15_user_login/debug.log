@@ -1,0 +1,50 @@
+2024-02-26 09:47:49,302 (web) [DEBUG] Incoming /account query
+2024-02-26 09:47:49,302 (web) [INFO] Granting access to /account
+2024-02-26 09:47:49,451 (web) [DEBUG] Sending account.css style
+2024-02-26 09:47:49,458 (web) [DEBUG] Sending account.js script
+2024-02-26 09:47:49,525 (web) [DEBUG] Sending back.svg media
+2024-02-26 09:47:49,530 (web) [DEBUG] Sending account.svg media
+2024-02-26 09:47:50,721 (web) [DEBUG] Incoming /logout query
+2024-02-26 09:47:50,767 (web) [DEBUG] Incoming / query
+2024-02-26 09:47:50,767 (web) [INFO] Requiring account info
+2024-02-26 09:47:50,914 (web) [DEBUG] Sending main.css style
+2024-02-26 09:47:50,920 (web) [DEBUG] Sending main.js script
+2024-02-26 09:47:50,992 (web) [DEBUG] Sending CenturySchoolbook-Bold.otf font
+2024-02-26 09:49:54,277 (web) [DEBUG] Incoming / query
+2024-02-26 09:49:54,278 (web) [INFO] Requiring account info
+2024-02-26 09:49:54,401 (web) [DEBUG] Sending main.js script
+2024-02-26 09:49:54,404 (web) [DEBUG] Sending main.css style
+2024-02-26 09:50:41,567 (web) [DEBUG] Incoming / query
+2024-02-26 09:50:41,567 (web) [INFO] Requiring account info
+2024-02-26 09:50:41,679 (web) [DEBUG] Sending main.css style
+2024-02-26 09:50:41,686 (web) [DEBUG] Sending main.js script
+2024-02-26 09:51:06,084 (web) [DEBUG] Incoming / query
+2024-02-26 09:51:06,084 (web) [INFO] Requiring account info
+2024-02-26 09:51:06,197 (web) [DEBUG] Sending main.css style
+2024-02-26 09:51:06,203 (web) [DEBUG] Sending main.js script
+2024-02-26 16:11:29,349 (web) - 10.42.0.1 - [DEBUG] Incoming / query
+2024-02-26 16:11:29,349 (web) - 10.42.0.1 - [INFO] Requiring account info
+2024-02-26 16:13:18,680 (web) - 10.42.0.1 - [DEBUG] Incoming / query
+2024-02-26 16:13:18,680 (web) - 10.42.0.1 - [INFO] Requiring account info
+2024-02-26 16:13:18,799 (web) - 10.42.0.1 - [DEBUG] Sending main.css style
+2024-02-26 16:13:18,800 (web) - 10.42.0.1 - [DEBUG] Sending main.js script
+2024-02-26 16:14:51,875 (web:10.42.0.1) [DEBUG] Incoming / query
+2024-02-26 16:14:51,875 (web:10.42.0.1) [INFO] Requiring account info
+2024-02-26 16:14:52,003 (web:10.42.0.1) [DEBUG] Sending main.css style
+2024-02-26 16:14:52,007 (web:10.42.0.1) [DEBUG] Sending main.js script
+2024-02-26 16:15:14,553 (web : 10.42.0.1) [DEBUG] Incoming / query
+2024-02-26 16:15:14,554 (web : 10.42.0.1) [INFO] Requiring account info
+2024-02-26 16:15:14,667 (web : 10.42.0.1) [DEBUG] Sending main.css style
+2024-02-26 16:15:14,670 (web : 10.42.0.1) [DEBUG] Sending main.js script
+2024-02-26 16:20:49,516 (web : 10.42.0.1) [D] Incoming /login query
+2024-02-26 16:20:49,517 (web : 10.42.0.1) [I] No matching login-password pair in database
+26/02/2024 16:28:05 (web : 10.42.0.1) [D] Incoming /account query
+26/02/2024 16:28:06 (web : 10.42.0.1) [D] Sending account.css style
+26/02/2024 16:28:06 (web : 10.42.0.1) [D] Sending account.js script
+26/02/2024 16:28:06 (web : 10.42.0.1) [D] Sending back.svg media
+26/02/2024 16:28:06 (web : 10.42.0.1) [D] Sending account.svg media
+26/02/2024 16:28:07 (web : 10.42.0.1) [D] Incoming /logout query
+26/02/2024 16:28:07 (web : 10.42.0.1) [D] Incoming / query
+26/02/2024 16:28:07 (web : 10.42.0.1) [I] Requiring account info
+26/02/2024 16:28:07 (web : 10.42.0.1) [D] Sending main.css style
+26/02/2024 16:28:07 (web : 10.42.0.1) [D] Sending main.js script
